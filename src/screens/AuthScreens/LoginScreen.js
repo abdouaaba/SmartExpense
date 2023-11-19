@@ -4,15 +4,34 @@ import { View, Text, StyleSheet, TextInput, Button } from 'react-native';
 import { Formik } from 'formik';
 import * as yup from 'yup';
 import { globalStyles } from '../../styles';
+import auth from '@react-native-firebase/auth';
 
 const LoginScreen = ({ navigation }) => {
   const navigateToSignup = () => {
     navigation.navigate('Sign Up');
   };
 
+  const navigateToDashboard = () => {
+    navigation.navigate('Dashboard');
+  };
+
   const handleLogin = (values) => {
-    // login logic
-    console.log('Login:', values);
+      const { email, password } = values;
+      auth()
+        .signInWithEmailAndPassword(email, password)
+        .then(() => {
+          console.log('Login successful');
+          navigateToDashboard();
+        })
+        .catch(error => {
+          if (error.code === 'auth/invalid-credential') {
+            console.error('Invalid email or password');
+            alert('Invalid email or password. Please check your credentials and try again.');
+          } else {
+            console.error('Login error:', error.message);
+            alert('An error occurred during login. Please try again later.');
+          }
+        });
   };
 
   return (

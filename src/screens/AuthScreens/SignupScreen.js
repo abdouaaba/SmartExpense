@@ -4,16 +4,40 @@ import { View, Text, TextInput, Button } from 'react-native';
 import { Formik } from 'formik';
 import * as yup from 'yup';
 import { globalStyles } from '../../styles';
+import auth from '@react-native-firebase/auth'
 
 const SignupScreen = ({ navigation }) => {
   const navigateToLogin = () => {
     navigation.navigate('Login');
   };
 
-  const handleSignup = (values) => {
-    // signup logic
-    console.log('Signup:', values);
+  const navigateToDashboard = () => {
+    navigation.navigate('Dashboard');
   };
+
+  const handleSignup = (values) => {
+    const { email, username, password } = values;
+    auth()
+      .createUserWithEmailAndPassword(email, password)
+      .then(() => {
+        console.log('User account created & signed in!');
+        navigateToDashboard();
+      })
+      .catch(error => {
+        if (error.code === 'auth/email-already-in-use') {
+          console.log('That email address is already in use!');
+          alert('Email address is already in use!');
+        }
+
+        if (error.code === 'auth/invalid-email') {
+          console.log('That email address is invalid!');
+          console.log('Email address is invalid!');
+        }
+
+        console.error(error);
+      });
+  };
+
 
   return (
     <View style={globalStyles.container}>
@@ -44,8 +68,8 @@ const SignupScreen = ({ navigation }) => {
             <TextInput
               style={globalStyles.input}
               placeholder="Username"
-              onChangeText={handleChange('email')}
-              value={values.email}
+              onChangeText={handleChange('username')}
+              value={values.username}
             />
             <Text style={globalStyles.error}>{errors.username}</Text>
             <TextInput
