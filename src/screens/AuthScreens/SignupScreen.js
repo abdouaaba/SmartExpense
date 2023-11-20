@@ -5,6 +5,7 @@ import { Formik } from 'formik';
 import * as yup from 'yup';
 import { globalStyles } from '../../styles';
 import auth from '@react-native-firebase/auth'
+import firestore from '@react-native-firebase/firestore';
 
 const SignupScreen = ({ navigation }) => {
   const navigateToLogin = () => {
@@ -15,27 +16,54 @@ const SignupScreen = ({ navigation }) => {
     navigation.navigate('Dashboard');
   };
 
-  const handleSignup = (values) => {
+  const handleSignup = async (values) => {
     const { email, username, password } = values;
-    auth()
-      .createUserWithEmailAndPassword(email, password)
-      .then(() => {
-        console.log('User account created & signed in!');
-        navigateToDashboard();
-      })
-      .catch(error => {
-        if (error.code === 'auth/email-already-in-use') {
-          console.log('That email address is already in use!');
-          alert('Email address is already in use!');
-        }
 
-        if (error.code === 'auth/invalid-email') {
-          console.log('That email address is invalid!');
-          console.log('Email address is invalid!');
-        }
-
-        console.error(error);
+    try {
+      const userCredential = await auth().createUserWithEmailAndPassword(email, password);
+      created_at = new Date();
+      
+      await firestore().collection('users').doc(userCredential.user.uid).set({
+        username,
+        email,
+        created_at,
       });
+
+      console.log('User account created & signed in!');
+      navigateToDashboard();
+    } catch(error) {
+      if (error.code === 'auth/email-already-in-use') {
+        console.log('That email address is already in use!');
+        alert('Email address is already in use!');
+      }
+
+      if (error.code === 'auth/invalid-email') {
+        console.log('That email address is invalid!');
+        console.log('Email address is invalid!');
+      }
+
+      console.error(error);
+    }
+
+    // auth()
+    //   .createUserWithEmailAndPassword(email, password)
+    //   .then(() => {
+    //     console.log('User account created & signed in!');
+    //     navigateToDashboard();
+    //   })
+    //   .catch(error => {
+    //     if (error.code === 'auth/email-already-in-use') {
+    //       console.log('That email address is already in use!');
+    //       alert('Email address is already in use!');
+    //     }
+
+    //     if (error.code === 'auth/invalid-email') {
+    //       console.log('That email address is invalid!');
+    //       console.log('Email address is invalid!');
+    //     }
+
+    //     console.error(error);
+    //   });
   };
 
 
