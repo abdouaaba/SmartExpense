@@ -14,93 +14,106 @@ const DashboardScreen = ({ navigation }) => {
   const [budgetStatus, setBudgetStatus] = useState(0);
   const [monthlyData, setMonthlyData] = useState([]);
 
-  useEffect(() => {
+  const fetchData = async () => {
     // Fetch and calculate total spending
-    const unsubscribeExpenses = firestore()
-      .collection('expenses')
-      .where('user_id', '==', auth().currentUser.uid)
-      .orderBy('date', 'desc')
-      .limit(5)
-      .onSnapshot((querySnapshot) => {
-        if (querySnapshot) {
-          let total = 0;
-          const recentExpensesData = [];
-          querySnapshot.forEach((doc) => {
-            total += doc.data().amount;
-            recentExpensesData.push({
-              id: doc.id,
-              amount: doc.data().amount,
-              date: doc.data().date.toDate(),
-              category: doc.data().category,
-            });
-          });
-          setTotalSpending(total);
-          setRecentExpenses(recentExpensesData);
-        } else {
-          console.log('No expenses found for the user.');
-          setTotalSpending(0);
-          setRecentExpenses([]);
-        }
+    try {
+      const userId = auth().currentUser.uid;
+      const querySnapshot = await firestore()
+        .collection('expenses')
+        .where('user_id', '==', userId)
+        .orderBy('date', 'desc')
+        .limit(5)
+        .get();
+
+      let total = 0;
+      const recentExpensesData = [];
+
+      querySnapshot.forEach((doc) => {
+        total += doc.data().amount;
+        recentExpensesData.push({
+          id: doc.id,
+          amount: doc.data().amount,
+          date: doc.data().date.toDate(),
+          category: doc.data().category,
+        });
       });
+
+      setTotalSpending(total);
+      setRecentExpenses(recentExpensesData);
+    } catch (error) {
+      console.error('Error fetching expenses:', error);
+    }
 
     // Fetch and calculate total budget
-    const unsubscribeBudget = firestore()
+    const budgetSnapshot = await firestore()
       .collection('budgets')
       .where('user_id', '==', auth().currentUser.uid)
-      .onSnapshot((querySnapshot) => {
-        if (querySnapshot) {
-          let totalBudget = 0;
-          querySnapshot.forEach((doc) => {
-            totalBudget += doc.data().amount;
-          });
-          setBudget(totalBudget);
-        } else {
-          console.log('No budgets found for the user.');
-          setBudget(0);
-        }
+      .get();
+
+    if (!budgetSnapshot.empty) {
+      let totalBudget = 0;
+      budgetSnapshot.forEach((doc) => {
+        totalBudget += doc.data().amount;
       });
-      const unsubscribeMonthlyData = firestore()
+      setBudget(totalBudget);
+    } else {
+      console.log('No budgets found for the user.');
+      setBudget(0);
+    }
+
+    // Fetch monthly spending data
+    const monthlySnapshot = await firestore()
       .collection('expenses')
       .where('user_id', '==', auth().currentUser.uid)
-      .orderBy('date', 'asc') // Order by date in ascending order
-      .onSnapshot((querySnapshot) => {
-        if (querySnapshot) {
-          const dataByMonth = {};
+      .orderBy('date', 'asc')
+      .get();
 
-          querySnapshot.forEach((doc) => {
-            const expenseDate = doc.data().date.toDate();
-            const monthYearKey = `${expenseDate.getMonth() + 1}-${expenseDate.getFullYear()}`;
+    if (!monthlySnapshot.empty) {
+      const dataByMonth = {};
 
-            if (!dataByMonth[monthYearKey]) {
-              dataByMonth[monthYearKey] = 0;
-            }
+      monthlySnapshot.forEach((doc) => {
+        const expenseDate = doc.data().date.toDate();
+        const monthYearKey = `${expenseDate.getMonth() + 1}-${expenseDate.getFullYear()}`;
 
-            dataByMonth[monthYearKey] += doc.data().amount;
-          });
-
-          const formattedData = Object.keys(dataByMonth).map((key) => ({
-            monthYear: key,
-            amount: dataByMonth[key],
-          }));
-
-          setMonthlyData(formattedData);
-        } else {
-          console.log('No monthly spending data found for the user.');
-          setMonthlyData([]);
+        if (!dataByMonth[monthYearKey]) {
+          dataByMonth[monthYearKey] = 0;
         }
+
+        dataByMonth[monthYearKey] += doc.data().amount;
       });
 
+      const formattedData = Object.keys(dataByMonth).map((key) => ({
+        monthYear: key,
+        amount: dataByMonth[key],
+      }));
+
+      setMonthlyData(formattedData);
+    } else {
+      console.log('No monthly spending data found for the user.');
+      setMonthlyData([]);
+    }
+  };
+
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('focus', () => {
+      // Refresh data when the screen comes into focus
+      fetchData();
+    });
+
+    // Cleanup the listener when the component unmounts
     return () => {
-      // Cleanup listeners
-      unsubscribeExpenses();
-      unsubscribeBudget();
-      unsubscribeMonthlyData();
+      unsubscribe();
     };
-  }, []);
+  }, [navigation, fetchData]);
+
 
   // Calculate budget status
   useEffect(() => {
-    setBudgetStatus(budget - totalSpending);
+    if(budget - totalSpending < 0) {
+    setBudgetStatus(0);
+    } else {
+      setBudgetStatus(budget - totalSpending);
+    }
   }, [totalSpending, budget]);
 
   const chartData = [
@@ -139,6 +152,13 @@ const DashboardScreen = ({ navigation }) => {
                 <Text>{expense.amount} - {expense.category} MAD</Text>
               </View>
             ))}
+
+            <TouchableOpacity
+              style={styles.viewAllExpensesButton}
+              onPress={() => navigation.navigate('Expense List')}
+            >
+              <Text style={styles.viewAllExpensesButtonText}>View All Expenses</Text>
+            </TouchableOpacity>
           </View>
 
           {/* Display Budget Status Pie Chart */}
@@ -185,6 +205,13 @@ const DashboardScreen = ({ navigation }) => {
           </View>
 
       </ScrollView>
+       {/* Refresh Button in the Navigation Bar */}
+      <TouchableOpacity
+        style={styles.refreshButton}
+        onPress={fetchData}
+      >
+        <Text style={styles.refreshButtonText}>Refresh</Text>
+      </TouchableOpacity>
       {/* Button to navigate to Expense Entry Screen */}
       <TouchableOpacity
         style={styles.expenseEntryButton}
@@ -219,9 +246,21 @@ const styles = StyleSheet.create({
   recentExpenseItem: {
     marginBottom: 5,
   },
+  viewAllExpensesButton: {
+    backgroundColor: '#4CAF50',
+    padding: 10,
+    borderRadius: 5,
+    marginTop: 10,
+  },
+  viewAllExpensesButtonText: {
+    color: '#fff',
+    textAlign: 'center',
+    fontSize: 16,
+  },
 
   pieChartContainer: {
     marginTop: 20,
+    width: '100%',
   },
   pieChartTitle: {
     fontSize: 18,
@@ -247,6 +286,20 @@ const styles = StyleSheet.create({
     borderRadius: 5,
   },
   expenseEntryButtonText: {
+    color: '#fff',
+    textAlign: 'center',
+    fontSize: 16,
+  },
+
+  refreshButton: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+    backgroundColor: '#2196F3',
+    padding: 10,
+    borderRadius: 5,
+  },
+  refreshButtonText: {
     color: '#fff',
     textAlign: 'center',
     fontSize: 16,
