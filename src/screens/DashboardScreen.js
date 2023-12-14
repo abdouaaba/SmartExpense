@@ -64,7 +64,7 @@ const DashboardScreen = ({ navigation }) => {
 
     // Fetch monthly spending data
     const monthlySnapshot = await firestore()
-      .collection('expenses')
+      .collection('entries')
       .where('user_id', '==', auth().currentUser.uid)
       .orderBy('date', 'asc')
       .get();
