@@ -64,37 +64,33 @@ const DashboardScreen = ({ navigation }) => {
 
     // Fetch monthly spending data
     const monthlySnapshot = await firestore()
-      .collection('entries')
+      .collection('expenses')
       .where('user_id', '==', auth().currentUser.uid)
       .orderBy('date', 'asc')
       .get();
 
     if (!monthlySnapshot.empty) {
-      const dataByMonth = { Expense: {}, Income: {} };
+      const dataByMonth = {};
 
       monthlySnapshot.forEach((doc) => {
-        const entryDate = doc.data().date.toDate();
-        const monthYearKey = `${entryDate.getMonth() + 1}-${entryDate.getFullYear()}`;
-        const entryType = doc.data().type || 'Expense';
+        const expenseDate = doc.data().date.toDate();
+        const monthYearKey = `${expenseDate.getMonth() + 1}-${expenseDate.getFullYear()}`;
 
-        if (!dataByMonth[entryType][monthYearKey]) {
-          dataByMonth[entryType][monthYearKey] = 0;
+        if (!dataByMonth[monthYearKey]) {
+          dataByMonth[monthYearKey] = 0;
         }
 
-        dataByMonth[entryType][monthYearKey] += doc.data().amount;
+        dataByMonth[monthYearKey] += doc.data().amount;
       });
 
-      const formattedData = Object.keys(dataByMonth).map((type) => ({
-        type,
-        data: Object.keys(dataByMonth[type]).map((key) => ({
-          monthYear: key,
-          amount: dataByMonth[type][key],
-        })),
+      const formattedData = Object.keys(dataByMonth).map((key) => ({
+        monthYear: key,
+        amount: dataByMonth[key],
       }));
 
       setMonthlyData(formattedData);
     } else {
-      console.log('No monthly entry data found for the user.');
+      console.log('No monthly spending data found for the user.');
       setMonthlyData([]);
     }
 
