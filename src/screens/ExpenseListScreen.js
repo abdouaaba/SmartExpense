@@ -5,23 +5,23 @@ import firestore from '@react-native-firebase/firestore';
 import auth from '@react-native-firebase/auth';
 
 const ExpenseListScreen = () => {
-  const [expenses, setExpenses] = useState([]);
+  const [entries, setEntries] = useState([]);
 
   useEffect(() => {
     const userId = auth().currentUser.uid;
 
     const unsubscribe = firestore()
-      .collection('expenses')
+      .collection('entries')
       .where('user_id', '==', userId)
       .orderBy('date', 'desc')
       .onSnapshot((querySnapshot) => {
-        const expensesData = [];
+        const entriesData = [];
 
         querySnapshot.forEach((doc) => {
-          expensesData.push({ id: doc.id, ...doc.data() });
+          entriesData.push({ id: doc.id, ...doc.data() });
         });
 
-        setExpenses(expensesData);
+        setEntries(entriesData);
       });
 
     return () => {
@@ -30,10 +30,10 @@ const ExpenseListScreen = () => {
     };
   }, []);
 
-  const handleDeleteExpense = (expenseId) => {
+  const handleDeleteEntry = (entryId) => {
     Alert.alert(
       'Confirm Delete',
-      'Are you sure you want to delete this expense?',
+      'Are you sure you want to delete this entry?',
       [
         {
           text: 'Cancel',
@@ -43,9 +43,9 @@ const ExpenseListScreen = () => {
           text: 'Delete',
           onPress: async () => {
             try {
-              await firestore().collection('expenses').doc(expenseId).delete();
+              await firestore().collection('entries').doc(entryId).delete();
             } catch (error) {
-              console.error('Error deleting expense:', error);
+              console.error('Error deleting entry:', error);
             }
           },
         },
@@ -56,26 +56,27 @@ const ExpenseListScreen = () => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Expense List</Text>
-      {expenses.length > 0 ? (
+      <Text style={styles.title}>Entries List</Text>
+      {entries.length > 0 ? (
         <FlatList
-          data={expenses}
+          data={entries}
           keyExtractor={(item) => item.id}
           renderItem={({ item }) => (
-            <View style={styles.expenseItem}>
-              <Text>{`Amount: ${item.amount.toFixed(2)} MAD`}</Text>
+            <View style={styles.entryItem}>
+              <Text>{`Type: ${item.type}`}</Text>
+              <Text>{`Amount: $${item.amount.toFixed(2)}`}</Text>
               <Text>{`Date: ${item.date.toDate().toLocaleDateString()}`}</Text>
               <Text>{`Category: ${item.category_id}`}</Text>
               <Text>{`Notes: ${item.notes || 'N/A'}`}</Text>
               {/* Add a delete button */}
-              <TouchableOpacity onPress={() => handleDeleteExpense(item.id)}>
+              <TouchableOpacity onPress={() => handleDeleteEntry(item.id)}>
                 <Text style={styles.deleteButton}>Delete</Text>
               </TouchableOpacity>
             </View>
           )}
         />
       ) : (
-        <Text>No expenses found.</Text>
+        <Text>No entries found.</Text>
       )}
     </View>
   );
@@ -90,7 +91,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginBottom: 20,
   },
-  expenseItem: {
+  entryItem: {
     borderBottomWidth: 1,
     borderBottomColor: '#ccc',
     marginBottom: 10,

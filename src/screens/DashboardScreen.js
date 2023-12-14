@@ -19,7 +19,7 @@ const DashboardScreen = ({ navigation }) => {
     try {
       const userId = auth().currentUser.uid;
       const querySnapshot = await firestore()
-        .collection('expenses')
+        .collection('entries')
         .where('user_id', '==', userId)
         .orderBy('date', 'desc')
         .limit(5)
@@ -35,6 +35,7 @@ const DashboardScreen = ({ navigation }) => {
           amount: doc.data().amount,
           date: doc.data().date.toDate(),
           category: doc.data().category,
+          type: doc.data().type,
         });
       });
 
@@ -63,35 +64,40 @@ const DashboardScreen = ({ navigation }) => {
 
     // Fetch monthly spending data
     const monthlySnapshot = await firestore()
-      .collection('expenses')
+      .collection('entries')
       .where('user_id', '==', auth().currentUser.uid)
       .orderBy('date', 'asc')
       .get();
 
     if (!monthlySnapshot.empty) {
-      const dataByMonth = {};
+      const dataByMonth = { Expense: {}, Income: {} };
 
       monthlySnapshot.forEach((doc) => {
-        const expenseDate = doc.data().date.toDate();
-        const monthYearKey = `${expenseDate.getMonth() + 1}-${expenseDate.getFullYear()}`;
+        const entryDate = doc.data().date.toDate();
+        const monthYearKey = `${entryDate.getMonth() + 1}-${entryDate.getFullYear()}`;
+        const entryType = doc.data().type || 'Expense';
 
-        if (!dataByMonth[monthYearKey]) {
-          dataByMonth[monthYearKey] = 0;
+        if (!dataByMonth[entryType][monthYearKey]) {
+          dataByMonth[entryType][monthYearKey] = 0;
         }
 
-        dataByMonth[monthYearKey] += doc.data().amount;
+        dataByMonth[entryType][monthYearKey] += doc.data().amount;
       });
 
-      const formattedData = Object.keys(dataByMonth).map((key) => ({
-        monthYear: key,
-        amount: dataByMonth[key],
+      const formattedData = Object.keys(dataByMonth).map((type) => ({
+        type,
+        data: Object.keys(dataByMonth[type]).map((key) => ({
+          monthYear: key,
+          amount: dataByMonth[type][key],
+        })),
       }));
 
       setMonthlyData(formattedData);
     } else {
-      console.log('No monthly spending data found for the user.');
+      console.log('No monthly entry data found for the user.');
       setMonthlyData([]);
     }
+
   };
 
   useEffect(() => {
@@ -145,11 +151,13 @@ const DashboardScreen = ({ navigation }) => {
 
           {/* Display Recent Expenses */}
           <View style={styles.recentExpensesContainer}>
-            <Text style={styles.recentExpensesTitle}>Recent Expenses</Text>
-            {recentExpenses.map((expense) => (
-              <View key={expense.id} style={styles.recentExpenseItem}>
-                <Text>{expense.date.toDateString()}</Text>
-                <Text>{expense.amount} - {expense.category} MAD</Text>
+            <Text style={styles.recentExpensesTitle}>Recent Entries</Text>
+            {recentExpenses.map((entry) => (
+              <View key={entry.id} style={styles.recentEntryItem}>
+                <Text>{`Type: ${entry.type}`}</Text>
+                <Text>{`Date: ${entry.date.toDate().toLocaleDateString()}`}</Text>
+                <Text>{`Amount: ${entry.amount} MAD`}</Text>
+                <Text>{`Category: ${entry.category}`}</Text>
               </View>
             ))}
 

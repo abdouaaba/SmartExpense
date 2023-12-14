@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, Button, StyleSheet } from 'react-native';
+import { View, Text, TextInput, Button, StyleSheet, TouchableOpacity } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Formik } from 'formik';
@@ -9,6 +9,7 @@ import auth from '@react-native-firebase/auth';
 
 const ExpenseEntryScreen = ({ navigation }) => {
   const [selectedCategory, setSelectedCategory] = useState('');
+  const [selectedType, setSelectedType] = useState('expense');
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [categories, setCategories] = useState([
@@ -24,12 +25,13 @@ const ExpenseEntryScreen = ({ navigation }) => {
       const { amount, notes } = values;
       const userId = auth().currentUser.uid;
 
-      await firestore().collection('expenses').add({
+      await firestore().collection('entries').add({
         amount: parseFloat(amount),
         category_id: selectedCategory,
         date: selectedDate,
         notes: notes,
-        user_id: userId,       
+        type: selectedType,
+        user_id: userId,
       });
 
       navigation.goBack();
@@ -103,6 +105,23 @@ const ExpenseEntryScreen = ({ navigation }) => {
 
             <Text style={styles.error}>{errors.category}</Text>
 
+            {/* Radio buttons for Type */}
+            <View style={styles.radioContainer}>
+              <Text style={styles.inputLabel}>Type</Text>
+              <TouchableOpacity
+                style={[styles.radio, selectedType === 'expense' && styles.selectedRadio]}
+                onPress={() => setSelectedType('expense')}
+              >
+              </TouchableOpacity>
+              <Text>Expense</Text>
+              <TouchableOpacity
+                style={[styles.radio, selectedType === 'income' && styles.selectedRadio]}
+                onPress={() => setSelectedType('income')}
+              >
+              </TouchableOpacity>
+              <Text>Income</Text>
+            </View>
+
             <TextInput
               style={styles.input}
               placeholder="Notes"
@@ -159,6 +178,32 @@ const styles = StyleSheet.create({
   datePickerLabel: {
     fontSize: 16,
     marginBottom: 5,
+  },
+
+  radioContainer: {
+    marginBottom: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  inputLabel: {
+    fontSize: 16,
+    marginBottom: 5,
+    marginRight: 10,
+  },
+  radio: {
+    height: 20,
+    width: 20,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: 'black',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 5,
+    marginLeft: 10,
+  },
+  
+  selectedRadio: {
+    backgroundColor: 'black',
   },
 });
 
