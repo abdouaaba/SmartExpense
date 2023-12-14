@@ -155,9 +155,9 @@ const DashboardScreen = ({ navigation }) => {
             {recentExpenses.map((entry) => (
               <View key={entry.id} style={styles.recentEntryItem}>
                 <Text>{`Type: ${entry.type}`}</Text>
-                <Text>{`Date: ${entry.date.toDate().toLocaleDateString()}`}</Text>
+                <Text>{`Date: ${entry.date.toLocaleDateString()}`}</Text>
                 <Text>{`Amount: ${entry.amount} MAD`}</Text>
-                <Text>{`Category: ${entry.category}`}</Text>
+                <Text>{`Category: ${entry.category_id}`}</Text>
               </View>
             ))}
 
