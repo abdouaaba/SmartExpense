@@ -10,7 +10,7 @@ import ExpenseEntryScreen from './screens/ExpenseEntryScreen';
 import ExpenseListScreen from './screens/ExpenseListScreen';
 import CategoryManagementScreen from './screens/CategoryManagementScreen';
 import InsightsScreen from './screens/InsightsScreen';
-import SearchFilterScreen from './screens/SearchFilterScreen';
+import VisualizationScreen from './screens/VisualizationScreen';
 import SettingsScreen from './screens/SettingsScreen';
 import LogoutScreen from './screens/LogoutScreen';
 
@@ -23,12 +23,12 @@ const AppNavigator = () => {
         <Stack.Screen name="Welcome" component={WelcomeScreen} />
         <Stack.Screen name="Log In" component={LoginScreen} />
         <Stack.Screen name="Sign Up" component={SignupScreen} />
-        <Stack.Screen name="Dashboard" component={DashboardScreen} />
+        <Stack.Screen name="Home" component={DashboardScreen} />
         <Stack.Screen name="Expense Entry" component={ExpenseEntryScreen} />
-        <Stack.Screen name="Expense List" component={ExpenseListScreen} />
+        <Stack.Screen name="Historical Data" component={ExpenseListScreen} />
         <Stack.Screen name="Category Management" component={CategoryManagementScreen} />
         <Stack.Screen name="Insights" component={InsightsScreen} />
-        <Stack.Screen name="Search Filter" component={SearchFilterScreen} />
+        <Stack.Screen name="Dashboard" component={VisualizationScreen} />
         <Stack.Screen name="Settings" component={SettingsScreen} />
         <Stack.Screen name="Logout" component={LogoutScreen} />
       </Stack.Navigator>
