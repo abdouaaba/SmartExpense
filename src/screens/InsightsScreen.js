@@ -87,7 +87,7 @@ const InsightsScreen = () => {
                 ],
               }}
               width={screenWidth - 40}
-              height={200}
+              height={500}
               yAxisLabel="DH"
               chartConfig={{
                 backgroundColor: '#ffffff',
