@@ -68,6 +68,7 @@ const SignupScreen = ({ navigation }) => {
             <TextInput
               style={globalStyles.input}
               placeholder="Email"
+              placeholderTextColor={'#a1a7aa'}
               keyboardType="email-address"
               onChangeText={handleChange('email')}
               value={values.email}
@@ -76,6 +77,7 @@ const SignupScreen = ({ navigation }) => {
             <TextInput
               style={globalStyles.input}
               placeholder="Username"
+              placeholderTextColor={'#a1a7aa'}
               onChangeText={handleChange('username')}
               value={values.username}
             />
@@ -83,6 +85,7 @@ const SignupScreen = ({ navigation }) => {
             <TextInput
               style={globalStyles.input}
               placeholder="Password"
+              placeholderTextColor={'#a1a7aa'}
               secureTextEntry
               onChangeText={handleChange('password')}
               value={values.password}
@@ -91,6 +94,7 @@ const SignupScreen = ({ navigation }) => {
             <TextInput
               style={globalStyles.input}
               placeholder="Confirm Password"
+              placeholderTextColor={'#a1a7aa'}
               secureTextEntry
               onChangeText={handleChange('confirmPassword')}
               value={values.confirmPassword}

@@ -1,13 +1,22 @@
 // screens/SettingsScreen.js
 import React, { useState } from 'react';
-import { View, Text, Button, StyleSheet, Switch, TouchableOpacity } from 'react-native';
+import { View, Text, Button, StyleSheet, Switch, TouchableOpacity, TextInput, Modal } from 'react-native';
+import { Formik } from 'formik';
+import * as yup from 'yup';
+import auth from '@react-native-firebase/auth';
 
 const SettingsScreen = () => {
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [modalContent, setModalContent] = useState(null);
   const [isDarkModeEnabled, setIsDarkModeEnabled] = useState(false);
   const [language, setLanguage] = useState('English');
   const [isNotificationsEnabled, setIsNotificationsEnabled] = useState(true);
   const [privacySetting, setPrivacySetting] = useState('Public');
   const [isTwoFactorAuthEnabled, setIsTwoFactorAuthEnabled] = useState(false);
+
+  const toggleModal = () => {
+    setIsModalVisible(!isModalVisible);
+  };
 
   const handleToggleDarkMode = () => {
     setIsDarkModeEnabled(!isDarkModeEnabled);
@@ -16,8 +25,69 @@ const SettingsScreen = () => {
 
   };
 
-  const ChangePassword = () => {
+  const savePassword = async (values) => {
+    try {
+      const { currentPassword, newPassword } = values;
+      const user = auth().currentUser;
 
+      // Reauthenticate the user before changing the password
+      const credential = auth.EmailAuthProvider.credential(user.email, currentPassword);
+      await user.reauthenticateWithCredential(credential);
+
+      // Change the user's password
+      await user.updatePassword(newPassword);
+
+      toggleModal();
+      console.log('Password saved successfully');
+    } catch (error) {
+      console.error('Error saving password:', error);
+    }
+  };
+
+  const ChangePassword = () => {
+    setModalContent(
+      <View>
+        <Formik
+          initialValues={{ currentPassword: '', newPassword: '' }}
+          validationSchema={yup.object().shape({
+            currentPassword: yup.string().required('Current password is required'),
+            newPassword: yup.string().required('New password is required'),
+          })}
+          onSubmit={savePassword}
+        >
+          {({ handleChange, handleSubmit, values, errors }) => (
+            <>
+              <Text style={styles.text}>Enter Current Password:</Text>
+              <TextInput
+                style={styles.text}
+                value={values.currentPassword}
+                onChangeText={handleChange('currentPassword')}
+                secureTextEntry
+                placeholder="Current Password"
+                placeholderTextColor={'#a1a7aa'}
+              />
+              <Text style={styles.error}>{errors.currentPassword}</Text>
+
+              <Text style={styles.text}>Enter New Password:</Text>
+              <TextInput
+                style={styles.text}
+                value={values.newPassword}
+                onChangeText={handleChange('newPassword')}
+                secureTextEntry
+                placeholder="New Password"
+                placeholderTextColor={'#a1a7aa'}
+              />
+              <Text style={styles.error}>{errors.newPassword}</Text>
+              <Button title="Save" onPress={handleSubmit} />
+              
+            </>
+          )}
+          
+        </Formik>
+        
+      </View>
+    );
+    toggleModal();
   };
 
   const UpdateProfile = () => {
@@ -104,6 +174,19 @@ const SettingsScreen = () => {
         </TouchableOpacity>
 
       </View>
+
+      {/* Modal */}
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={isModalVisible}
+        onRequestClose={toggleModal}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>{modalContent}</View>
+          <Button title="Close" onPress={toggleModal} />
+        </View>
+      </Modal>
     </View>
   );
 };
@@ -113,6 +196,16 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 20,
   },
+
+  text: {
+    fontSize: 16,
+    color: 'black',
+  },
+  error: {
+    color: 'red',
+    marginBottom: 10,
+  },
+
   Button:{
     backgroundColor: '#3498db',
     padding: 8,
@@ -143,6 +236,16 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
 
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    backgroundColor: 'white',
+    padding: 20,
+    borderRadius: 10,
+  },
 });
 
 export default SettingsScreen;

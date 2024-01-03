@@ -63,11 +63,11 @@ const ExpenseListScreen = () => {
           keyExtractor={(item) => item.id}
           renderItem={({ item }) => (
             <View style={styles.entryItem}>
-              <Text>{`Type: ${item.type}`}</Text>
-              <Text>{`Amount: ${item.amount.toFixed(2)} MAD`}</Text>
-              <Text>{`Date: ${item.date.toDate().toLocaleDateString()}`}</Text>
-              <Text>{`Category: ${item.category ? item.category.name : 'N/A'}`}</Text>
-              <Text>{`Notes: ${item.notes || 'N/A'}`}</Text>
+              <Text style={styles.labelText}>{`Type: ${item.type}`}</Text>
+              <Text style={styles.labelText}>{`Amount: ${item.amount.toFixed(2)} MAD`}</Text>
+              <Text style={styles.labelText}>{`Date: ${item.date.toDate().toLocaleDateString()}`}</Text>
+              <Text style={styles.labelText}>{`Category: ${item.category ? item.category.name : 'N/A'}`}</Text>
+              <Text style={styles.labelText}>{`Notes: ${item.notes || 'N/A'}`}</Text>
               {/* Add a delete button */}
               <TouchableOpacity onPress={() => handleDeleteEntry(item.id)}>
                 <Text style={styles.deleteButton}>Delete</Text>
@@ -93,6 +93,11 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     paddingBottom: 10,
   },
+
+  labelText: {
+    color: 'black',
+  },
+
   deleteButton: {
     color: 'red',
     fontSize: 16,

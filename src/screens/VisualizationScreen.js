@@ -247,6 +247,7 @@ const styles = StyleSheet.create({
     marginRight: 5,
   },
   legendLabelText: {
+    color: 'black',
     fontSize: 14,
   },
 });
